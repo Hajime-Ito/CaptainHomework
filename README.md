@@ -1,0 +1,2 @@
+# CaptainHomeworkBot
+SlackのSlashCommandを利用してSlackから自分の宿題を管理するアプリです。
