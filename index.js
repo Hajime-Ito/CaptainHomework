@@ -304,14 +304,16 @@ cron.schedule('59 59 17 * * *', () => {
     let ref = db.ref("Todolist/")
     ref.on('child_added', (snapshot) => {
         if (snapshot.val().reset == today) {
-            ref.update({
+            let ref1 = db.ref("Todolist/").child(snapshot.val().childkey)
+            ref1.update({
                 assesment: '0'
             })
         }
+        ref.off()
     })
 })
 
-cron.schedule('0 50 0,3,6,9,12,15,18,21 * * *', () => {
+cron.schedule('0 0 0,12 * * *', () => {
     let ref = db.ref("Todolist/")
     let numbers = [0, 1, 2, 3, 4, 5]
     let today = moment().format('d')
