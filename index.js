@@ -311,52 +311,56 @@ cron.schedule('59 59 17 * * *', () => {
     })
 })
 
-cron.schedule('0 0 0 * * *', () => {
-    let pass = req.body.text//...['password']
+cron.schedule('0 50 0,3,6,9,12,15,18,21 * * *', () => {
     let ref = db.ref("Todolist/")
     let numbers = [0, 1, 2, 3, 4, 5]
     let today = moment().format('d')
     let yesterday = [1, 2, 3, 4, 5, 0]
-    let tmp = ''
 
-    let ref1 = db.ref('/Todomember').child(pass)
-    ref.on('child_added', (snapshot) => {
-        if (snapshot.val().key == pass) {
-            let message = ''
-            var reply = ''
-            let assesment = snapshot.val().assesment
-            let resetday = snapshot.val().reset
-            let day = ['日', '月', '火', '水', '木', '金', '土']
-            for (let n of numbers)
-                if (assesment == n) {
-                    for (let n of numbers) {
-                        if (assesment == n) message += '▼'
-                        else message += 'ー'
+    let ref1 = db.ref('/Todomember')
+
+    ref1.on('child_added', (snapshot) => {
+        var pass = snapshot.val().key
+        var tmp = ''
+        ref.on('child_added', (snapshot) => {
+            if (pass == snapshot.val().key) {
+                let message = ''
+                var reply = ''
+                let assesment = snapshot.val().assesment
+                let resetday = snapshot.val().reset
+                let day = ['日', '月', '火', '水', '木', '金', '土']
+                for (let n of numbers)
+                    if (assesment == n) {
+                        for (let n of numbers) {
+                            if (assesment == n) message += '▼'
+                            else message += 'ー'
+                        }
                     }
-                }
-            if (message != '')
-                if (today == snapshot.val().reset && assesment == '5')
-                    reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                else if (today == snapshot.val().reset)
-                    reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                else if (assesment == '5' && snapshot.val().reset == yesterday[today])
-                    reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                else if (snapshot.val().reset == yesterday[today])
-                    reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                else if (assesment == '5')
-                    reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
+                if (message != '')
+                    if (today == snapshot.val().reset && assesment == '5')
+                        reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
+                    else if (today == snapshot.val().reset)
+                        reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
+                    else if (assesment == '5' && snapshot.val().reset == yesterday[today])
+                        reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
+                    else if (snapshot.val().reset == yesterday[today])
+                        reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
+                    else if (assesment == '5')
+                        reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
+                    else
+                        reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
                 else
-                    reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-            else
-                reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n' + message + '\n\n'
+                    reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n' + message + '\n\n'
 
-            tmp += reply
-            console.log(tmp)
-            ref1.update({
-                text: tmp
-            })
-        }
-        ref.off()
+                tmp += reply
+                console.log(tmp)
+                let ref2 = db.ref('/Todomember').child(pass)
+                ref2.update({
+                    text: tmp
+                })
+            }
+            ref.off()
+        })
     })
 })
 
