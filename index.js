@@ -236,7 +236,7 @@ app.post('/TimerToday', (req, res) => {
     setTimeout(function () {
         res.end()
     }, 1000)
-    //timer setted '0:00'
+    //timer set '0:00'
     writeText()
 })
 
