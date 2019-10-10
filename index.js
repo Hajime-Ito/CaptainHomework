@@ -2,18 +2,19 @@ const moment = require('moment')
 require('moment-timezone')
 moment.tz.setDefault('Asia/Tokyo')
 const admin = require("firebase-admin")
+const functions = require('firebase-functions')
 const express = require('express')
 const bodyParser = require('body-parser')
-const cron = require('node-cron')
+
 
 // Instantiates Express and assigns our app variable to it
 const app = express()
 // Fetch the service account key JSON file contents
-const serviceAccount = require("")
+const serviceAccount = require("./hogehoge")
 // Initialize the app with a service account, granting admin privileges
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: ""
+    databaseURL: "hogehoge"
 })
 // As an admin, the app has access to read and write all data, regardless of Security Rules
 var db = admin.database()
@@ -72,6 +73,8 @@ app.post('/set', (req, res) => {
             key: pass,
             assesment: 0,
             childkey: childkey
+        }).then(() => {
+            writeText()
         })
         res.end('オーキードーキー!' + todoName + 'はセットしといたぜい～')
     } catch (e) { }
@@ -103,6 +106,8 @@ app.post('/delete', (req, res) => {
                             key: null,
                             childkey: null,
                             assesment: null
+                        }).then(() => {
+                            writeText()
                         })
                         res.end('あいよ。兄ちゃんの言ったデータ(' + todoName + ')は消しといた。')
                     }
@@ -122,11 +127,6 @@ app.post('/update', (req, res) => {
     let todoName = _txtarray[1]
     let assesment = _txtarray[2]
     let ref = db.ref("/Todolist")
-    let ref1 = db.ref('/Todomember').child(pass)
-    let numbers = [0, 1, 2, 3, 4, 5]
-    let yesterday = [1, 2, 3, 4, 5, 0]
-    let tmp = ''
-    let today = moment().format('d')
 
     setTimeout(function () {
         res.end('おつかれい！' + todoName + 'はアップデートしといたぜ～　また頑張れよ！')
@@ -143,49 +143,7 @@ app.post('/update', (req, res) => {
                         ref.child(snapshot.val().childkey).update({
                             assesment: assesment
                         }).then(() => {
-                            ref1.update({
-                                text: ''
-                            })
-
-                            ref.on('child_added', (snapshot) => {
-                                if (snapshot.val().key == pass) {
-                                    let message = ''
-                                    var reply = ''
-                                    let assesment = snapshot.val().assesment
-                                    let resetday = snapshot.val().reset
-                                    let day = ['日', '月', '火', '水', '木', '金', '土']
-                                    for (let n of numbers)
-                                        if (assesment == n) {
-                                            for (let n of numbers) {
-                                                if (assesment == n) message += '▼'
-                                                else message += 'ー'
-                                            }
-                                        }
-
-                                    if (message != '')
-                                        if (today == snapshot.val().reset && assesment == '5')
-                                            reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                        else if (today == snapshot.val().reset)
-                                            reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                        else if (assesment == '5' && snapshot.val().reset == yesterday[today])
-                                            reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                        else if (snapshot.val().reset == yesterday[today])
-                                            reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                        else if (assesment == '5')
-                                            reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                        else
-                                            reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                    else
-                                        reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n' + message + '\n\n'
-
-                                    tmp += reply
-                                    console.log(tmp)
-                                    ref1.update({
-                                        text: tmp
-                                    })
-                                }
-                                ref.off()
-                            })
+                            writeText()
                         })
                     }
                     ref.off()
@@ -204,11 +162,6 @@ app.post('/resetday', (req, res) => {
     let resetDate = _txtarray[2]
     let ref = db.ref("/Todolist")
     let date = { 日: '0', 月: '1', 火: '2', 水: '3', 木: '4', 金: '5', 土: '6' }
-    let ref1 = db.ref('/Todomember').child(pass)
-    let numbers = [0, 1, 2, 3, 4, 5]
-    let yesterday = [1, 2, 3, 4, 5, 0]
-    let tmp = ''
-    let today = moment().format('d')
 
     try {
         let REF = db.ref('/Todomember').orderByChild("key").equalTo(pass)
@@ -222,49 +175,7 @@ app.post('/resetday', (req, res) => {
                 ref.child(snapshot.val().childkey).update({
                     reset: date[resetDate]
                 }).then(() => {
-                    ref1.update({
-                        text: ''
-                    })
-
-                    ref.on('child_added', (snapshot) => {
-                        if (snapshot.val().key == pass) {
-                            let message = ''
-                            var reply = ''
-                            let assesment = snapshot.val().assesment
-                            let resetday = snapshot.val().reset
-                            let day = ['日', '月', '火', '水', '木', '金', '土']
-                            for (let n of numbers)
-                                if (assesment == n) {
-                                    for (let n of numbers) {
-                                        if (assesment == n) message += '▼'
-                                        else message += 'ー'
-                                    }
-                                }
-
-                            if (message != '')
-                                if (today == snapshot.val().reset && assesment == '5')
-                                    reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                else if (today == snapshot.val().reset)
-                                    reply = '*(today)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                else if (assesment == '5' && snapshot.val().reset == yesterday[today])
-                                    reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                else if (snapshot.val().reset == yesterday[today])
-                                    reply = '*(!)' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                else if (assesment == '5')
-                                    reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')[complete!]\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                                else
-                                    reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n`|S|' + message + '|G|`  (' + assesment * 20 + '%)' + '\n\n'
-                            else
-                                reply = '*' + snapshot.val().todo + '* (' + day[resetday] + ')\n' + message + '\n\n'
-
-                            tmp += reply
-                            console.log(tmp)
-                            ref1.update({
-                                text: tmp
-                            })
-                        }
-                        ref.off()
-                    })
+                    writeText()
                 })
 
                 res.end('おつかれい！' + todoName + 'は' + resetDate + '曜日にセットしといたぜ～　また頑張れよ！')
@@ -299,27 +210,46 @@ app.post('/home', (req, res) => {
     res.end(text)
 })
 
-cron.schedule('59 59 17 * * *', () => {
+app.post('/TimerAfterSchool', (req, res) => {
+    setTimeout(function () {
+        res.end()
+    }, 1000)
+
+    let ref = db.ref("/Todolist")
     let today = moment().format('d')
-    let ref = db.ref("Todolist/")
+
     ref.on('child_added', (snapshot) => {
         if (snapshot.val().reset == today) {
-            let ref1 = db.ref("Todolist/").child(snapshot.val().childkey)
-            ref1.update({
+            var key = snapshot.val().childkey
+            let ref3 = db.ref("/Todolist/" + key)
+            ref3.update({
                 assesment: '0'
+            }).then(() => {
+                writeText()
             })
         }
-        ref.off()
     })
+
 })
 
-cron.schedule('0 0 0,12 * * *', () => {
-    let ref = db.ref("Todolist/")
+app.post('/TimerToday', (req, res) => {
+    setTimeout(function () {
+        res.end()
+    }, 1000)
+    //timer setted '0:00'
+    writeText()
+})
+
+let writeText = () => {
+    let ref = db.ref("/Todolist")
     let numbers = [0, 1, 2, 3, 4, 5]
     let today = moment().format('d')
     let yesterday = [1, 2, 3, 4, 5, 0]
-
     let ref1 = db.ref('/Todomember')
+
+    ref1.update({
+        text: ''
+    })
 
     ref1.on('child_added', (snapshot) => {
         var pass = snapshot.val().key
@@ -364,11 +294,6 @@ cron.schedule('0 0 0,12 * * *', () => {
             ref.off()
         })
     })
-})
-
-app.get('/todohajime', (req, res) => {
-    res.end('thanks')
-})
+}
 
 exports.app = functions.https.onRequest(app)
-exports.cron = functions.https.onRequest(cron)
